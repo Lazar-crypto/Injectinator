@@ -33,11 +33,16 @@ public class Injectinator {
 
     //returns object with all of its dependencies
     public <T> T getBuiltObject(Class<T> classToInjectTo) throws Exception {
-        return injectViaFields(classToInjectTo);
+        try {
+            return injectViaFields(classToInjectTo);
+        } catch (Exception e) {
+            throw new Exception();
+        }
     }
 
     private <T> T injectViaFields(Class<T> classToInjectTo) throws Exception {
-        T instance = classToInjectTo.getConstructor().newInstance();
+
+        T instance = createInstance(classToInjectTo);
 
         for (Field field : classToInjectTo.getDeclaredFields()) {
             if(field.isAnnotationPresent(InjectMe.class)){
@@ -53,6 +58,15 @@ public class Injectinator {
             }
         }
         return  instance;
+    }
+
+    private <T> T createInstance(Class<T> classToInjectTo) throws Exception {
+
+        for (Object object : singletons.values()) {
+            if(object.getClass() == classToInjectTo)
+                return (T) object;
+        }
+        return classToInjectTo.getConstructor().newInstance();
     }
 
     private Object getSingleton(Class<?> type) throws Exception{
